@@ -1,1 +1,201 @@
-Hello World
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sudoku solving API experiment</title>
+<style>
+table.su {
+  border-collapse: collapse;
+  margin:1em;
+}
+td.su {
+  height:30px;
+  width:30px;
+  border:1px solid;
+}
+td:first-child.su {
+  border-left:solid;
+}
+td:nth-child(3n).su {
+  border-right:solid;
+}
+tr:first-child.su {
+  border-top:solid;
+}
+tr:nth-child(3n).su {
+  border-bottom:solid;
+}
+td.su2 {
+  height:30px;
+  width:30px;
+  border:1px solid;
+}
+td:first-child.su2 {
+  border-left:solid;
+}
+td:nth-child(2n).su2 {
+  border-right:solid;
+}
+tr:first-child.su2 {
+  border-top:solid;
+}
+tr:nth-child(2n).su2 {
+  border-bottom:solid;
+}
+input.su {
+  text-align: center;
+  border: 0px;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+</head> 
+<body>
+
+<h2>Sodoku solver</h2>
+<input list="samples" type="text" size=81 maxlength=81 id="in_form"/>
+<button type="button" id="fill_btn">Fill</button>
+<p><table id="puzzel_in" class="su"></table></p>
+<table>
+<tr><td>Width</td><td>
+<select name="width" id="wide">
+	<option value="3">3</option>
+	<option value="2">2</option>
+</select></td></tr>
+<tr><td>Height</td><td>
+<select name="height" id="high">
+	<option value="3">3</option>
+	<option value="2">2</option>
+</select></td></tr>
+<tr><td>Diagonal constraint</td><td>
+<select name="diagonal" id="diag">
+	<option value="0">no</option>
+	<option value="1">yes</option>
+</select></td></tr>
+</table>
+<button type="button" id="solve_btn">Solve</button>
+<button type="button" id="reset_btn">Reset</button>
+<p><table id="puzzel_out" class="su"></table></p>
+<pre id="resultmessage"></pre>
+<datalist id="samples">
+	<option value="002009300800020100900008060000500400600000001100743500004000075368070020000000000">easy</option>
+	<option value="200370009009200007001004002050000800008000900006000040900100500800007600400089001">medium</option>
+	<option value="000200000090050020305000407400000600050070090001000002804000905060010080000006000">difficult</option>
+	<option value="070020580000030400000500000090000040064000035000010000000800003002600700049050000">diagonal</option>
+	<option value="000010400302000200006040305000060001">3 by 2</option>
+	<option value="0200104000030000">2 by 2</option>
+</datalist>
+
+<script>
+function tableWxH(pref, extra, w, h) {
+	var fieldno=1, text="";
+	for (var row = 0; row < w*h; row++) {
+		text += "<tr class=\"su"+(h==2?"2":"")+"\">";
+		for (var col = 0; col < w*h; col++)
+			text += "<td class=\"su"+(w==2?"2":"")+"\"><input type=\"text\" class=\"su\" size=\"1\" maxlength=\"1\" id=\""+pref+(fieldno++)+"\""+extra+"/></td>";
+		text += "</tr>";
+	}
+	return text;
+}
+function table_in() {
+	return tableWxH("in_", "", parseInt($('#wide').val()), parseInt($('#high').val()));
+}
+function table_out() {
+	return tableWxH("out_", " readonly", parseInt($('#wide').val()), parseInt($('#high').val()));
+}
+function redrawboards() {
+	document.getElementById("puzzel_in").innerHTML = table_in();
+	document.getElementById("puzzel_out").innerHTML = table_out();
+}
+function clearboards() {
+	var w = parseInt($('#wide').val()), h = parseInt($('#high').val());
+	var blks = w*w*h*h;
+	for(var pos=1; pos <= blks; pos++) {
+		$('#in_'+pos).val("");
+		$('#out_'+pos).val("");
+	}
+}
+redrawboards();
+
+$(function () {
+	$(":disabled").css("background", "#22ea22");
+	$(document).ajaxSend(function(e, xhr, opt){
+		$("#solve_btn").prop("disabled", true);
+	});
+	$(document).ajaxStop(function(e, xhr, opt){
+		$("#solve_btn").prop("disabled", false);
+	});
+    $('#fill_btn').click(function () {
+	    var strfield = $('#in_form').val();
+		for(var pos=0; pos < strfield.length; pos++) {
+			var ch = strfield.substring(pos,pos+1);
+			$('#in_'+(pos+1)).val(ch == '0' ? "" : ch);
+		}
+	});
+    $('#solve_btn').click(function () {
+	    var board=[];
+		var w = parseInt($('#wide').val()), h = parseInt($('#high').val());
+		var blks = w*w*h*h;
+		var filled = 0;
+		for(var pos=1; pos <= blks; pos++) {
+			var ch = $('#in_'+pos).val();
+			board[pos-1] = parseInt((ch == "" ? '0' : ch));
+			if(board[pos-1] > 0)
+				filled++;
+		}
+		if(filled < w*h) {
+			document.getElementById("resultmessage").innerHTML = "Not enough input data.";
+			return;
+		}
+		$.ajax({
+			type: "POST",
+			contentType: "application/json; charset=utf-8",
+			//url : "http://localhost:8080/solve",
+			url : "https://sud-api-1.ew.r.appspot.com/solve",
+			data : JSON.stringify({ "board":board, "width":parseInt($('#wide').val()), "height":parseInt($('#high').val()), "diagonal":($('#diag').val() == "1") }),
+			dataType: "json",
+            success(response) {
+				//console.log(response);
+				if(response.stats.solutions_found >= 1) {
+					// solution
+					for(var pos=1; pos <= blks; pos++)
+						$('#out_'+pos).val(response.board[pos-1]);
+				} else {
+					// blank
+					for(var pos=1; pos <= blks; pos++)
+						$('#out_'+pos).val("");
+				}
+				if(response.stats.solutions_found == 1) {
+					document.getElementById("resultmessage").innerHTML = "Difficulty indicator: "+response.stats.rating+"<br/>10 is difficult, 0 is easy." +
+						(response.stats.message.length > 0 ? "<br/>"+response.stats.message : "");
+				} else {
+					document.getElementById("resultmessage").innerHTML = "Found "+response.stats.solutions_found+" solutions." +
+						(response.stats.message.length > 0 ? "<br/>"+response.stats.message : "");
+				}
+            },
+			error: function (result) {
+				alert(result.responseText);
+			}
+        });
+    });
+	$('#reset_btn').click(function () {
+		$('#wide').val("3");
+		$('#high').val("3");
+		$('#diag').val("0");
+		$('#in_form').val("");
+		document.getElementById("resultmessage").innerHTML = "";
+		redrawboards();
+		clearboards();
+		$("#solve_btn").prop("disabled", false);
+	});
+	$("#wide").change(function() {
+		redrawboards();
+		clearboards();
+	});
+	$("#high").change(function() {
+		redrawboards();
+		clearboards();
+	});
+});
+</script>
+
+</body>
+</html>
