@@ -59,6 +59,7 @@
 
 <h2>Results</h2>
 <span id="resultmessage">Press Check &amp; Calculate button above.</span>
+<button type="button" id="order_btn" style="visibility: hidden;">Order now</button>
 
 <hr/>
 
@@ -68,6 +69,7 @@ var slide_width = document.getElementById("in_width");
 var slide_barrelwidth = document.getElementById("in_barrelwidth");
 var select_gender = document.getElementById("in_gender");
 var slide_threadlen = document.getElementById("in_threadlen");
+var json_req = "";
 var want_width = 40;
 var want_barwid = 30;
 function sizestring(val) {
@@ -133,7 +135,7 @@ $(function () {
 		$("#solve_btn").prop("disabled", false);
 	});
 	$('#check_btn').click(function () {
-		var json_req = JSON.stringify({ 
+		json_req = JSON.stringify({ 
 			"length":parseInt(slide_length.value),
 			"width":parseInt(slide_width.value),
 			"barrelwidth":parseInt(slide_barrelwidth.value),
@@ -143,13 +145,16 @@ $(function () {
 			"calibermm":(document.getElementById("in_caliber").value),
 			"material":(document.getElementById("in_material").value)
 			});
-	    document.getElementById("resultmessage").innerHTML = "<pre>\n"+JSON.stringify(JSON.parse(json_req),null,2)+"</pre>\nA confirmation of correct configuration and retail price could be shown at this point.<br/>";
-		url = "mailto:hansdampf1943@gmail.com?subject=Order for airgun silencer&body=Dear hansdampf,%0AI would like to order "+
+	    document.getElementById("resultmessage").innerHTML = "<pre>\n"+JSON.stringify(JSON.parse(json_req),null,2)+"</pre>\n<b>To do:</b> A confirmation of correct configuration and retail price could be shown at this point.<br/>";
+		document.getElementById("order_btn").style.visibility="visible";
+	});
+	$('#order_btn').click(function () {
+		var url = "mailto:hansdampf1943@gmail.com?subject=Order for airgun "+
+			  "silencer&body=Dear hansdampf,%0AI would like to order "+
 		      "an airgun silencer following these parameters:%0A"+
 			  JSON.stringify(JSON.parse(json_req),null,2)+
 			  "%0A%0ABest regards,%0A..sign here..%0A";
-		url = url.replace(/ /g, "%20").replace(/\n/g,"%0A");
-	    //document.getElementById("resultmessage").innerHTML = url;
+		url = url.replace(/ /g,"%20").replace(/\n/g,"%0A");
 		window.open(url, "_self");
 	});
 });
