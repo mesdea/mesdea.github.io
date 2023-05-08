@@ -144,36 +144,13 @@ $(function () {
 			"material":(document.getElementById("in_material").value)
 			});
 	    document.getElementById("resultmessage").innerHTML = "<pre>\n"+JSON.stringify(JSON.parse(json_req),null,2)+"</pre>\nA confirmation of correct configuration and retail price could be shown at this point.<br/>";
-		$.ajax({
-			type: "POST",
-			contentType: "application/json; charset=utf-8",
-			url : "http://localhost:8080/checkit",
-			//url : "https://sud-api-1.ew.r.appspot.com/checkit",
-			data : json_req,
-			dataType: "json",
-            success(response) {
-				//console.log(response);
-				//if(response.stats.solutions_found >= 1) {
-				//	// solution
-				//	for(var pos=1; pos <= blks; pos++)
-				//		$('#out_'+pos).val(response.board[pos-1]);
-				//} else {
-				//	// blank
-				//	for(var pos=1; pos <= blks; pos++)
-				//		$('#out_'+pos).val("");
-				//}
-				//if(response.stats.solutions_found == 1) {
-				//	document.getElementById("resultmessage").innerHTML = "Difficulty indicator: "+response.stats.rating+"<br/>10 is difficult, 0 is easy." +
-				//		(response.stats.message.length > 0 ? "<br/>"+response.stats.message : "");
-				//} else {
-				//	document.getElementById("resultmessage").innerHTML = "Found "+response.stats.solutions_found+" solutions." +
-				//		(response.stats.message.length > 0 ? "<br/>"+response.stats.message : "");
-				//}
-            },
-			error: function (result) {
-				//alert(result.responseText);
-			}
-        });
+		url = "mailto:hansdampf1943@gmail.com?subject=Order for airgun silencer&body=Dear hansdampf,%0AI would like to order "+
+		      "an airgun silencer following these parameters:%0A"+
+			  JSON.stringify(JSON.parse(json_req),null,2)+
+			  "%0A%0ABest regards,%0A..sign here..%0A";
+		url = url.replace(/ /g, "%20").replace(/\n/g,"%0A");
+	    //document.getElementById("resultmessage").innerHTML = url;
+		window.open(url, "_self");
 	});
 });
 </script>
