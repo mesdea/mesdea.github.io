@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Configurator</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+</head> 
+<body>
+
+<h2>Configurator</h2>
+<img id="legend" src="sil-f.png" alt="" width=540 align="right">
+
+<table>
+<tr><td>Overall length</td><td>
+	<input type="range" min="100" max="320" value="200" class="slider" id="in_length"> <span id="show_length"></span></td></tr>
+<tr><td>Body width</td><td>
+	<input type="range" min="25" max="80" value="40" class="slider" id="in_width"> <span id="show_width"></span></td></tr>
+<tr><td>Tapered width</td><td>
+	<input type="range" min="25" max="80" value="30" class="slider" id="in_barrelwidth"> <span id="show_barrelwidth"></span></td></tr>
+<tr><td>Thread gender</td><td>
+	<select id="in_gender"/>
+    <option value="female" selected>Female, thread on inside of silencer</option>
+    <option value="male">Male, thread on outside of silencer</option></select></td></tr>
+<tr id="male_threadlen" style="visibility: hidden;"><td>Thread length</td><td>
+	<input type="range" min="5" max="25" value="10" class="slider" id="in_threadlen"> <span id="show_threadlen"></span></td></tr>
+<tr><td>Thread specs</td><td>
+	<select id="in_thread"/>
+    <option value="UNF12" selected>UNF-1/2 (20 TPI)</option>
+	<option value="UNEF12">UNEF-1/2 (28 TPI)</option>
+	<option value="UNF58">UNF-5/8 (18 TPI)</option>
+	<option value="UNEF58">UNEF-5/8 (24 TPI)</option>
+	<option value="M10">M10 (1 mm/turn)</option>
+	<option value="M14">M14 (1 mm/turn)</option>
+	<option value="M14L">M14 LEFT (1 mm/turn)</option>
+	<option value="M14x125">M14 (1.25 mm/turn)</option>
+	<option value="M18">M18 (1 mm/turn)</option>
+	<option value="M20">M20 (1 mm/turn)</option>
+	<option value="M24">M24 (1 mm/turn)</option>
+	<option value="M305">M30.5 (1 mm/turn) (for AEA)</option>
+	</select></td></tr>
+<tr><td>Caliber</td><td><select id="in_caliber"/>
+    <option value="4.5">4.5mm / .177</option>
+	<option value="5.5" selected>5.5mm / .22</option>
+	<option value="6">6mm (airsoft)</option>
+	<option value="6.35">6.35mm / .25</option>
+	<option value="7.62">7.62mm / .30</option>
+	<option value="9">9mm / .35</option>
+	<option value="10.2">10.2mm / .40</option>
+	<option value="11.4">11.4mm / .45</option>
+	<option value="12.7">12.7mm / .50</option></select></td></tr>
+<tr><td>Material</td><td><select id="in_material"/>
+    <option value="pla">PLA (black)</option>
+    <option value="pa12">PA12 (nylon)</option>
+    <option value="alu">Aluminum (anodozed)</option>
+	<option value="gold">Gold</option></select></td></tr>
+</table>
+<button type="button" id="check_btn">Check &amp; Calculate</button>
+
+<hr/>
+
+<h2>Results</h2>
+<span id="resultmessage">Press Check &amp; Calculate button above.</span>
+
+<hr/>
+
+<script>
+var slide_length = document.getElementById("in_length");
+var slide_width = document.getElementById("in_width");
+var slide_barrelwidth = document.getElementById("in_barrelwidth");
+var select_gender = document.getElementById("in_gender");
+var slide_threadlen = document.getElementById("in_threadlen");
+var want_width = 40;
+var want_barwid = 30;
+function sizestring(val) {
+	return val+"mm";
+}
+function populate_length() { document.getElementById("show_length").innerHTML = sizestring(slide_length.value); }
+function populate_width() { document.getElementById("show_width").innerHTML = sizestring(slide_width.value); }
+function populate_barrelwidth() { document.getElementById("show_barrelwidth").innerHTML = sizestring(slide_barrelwidth.value); }
+function populate_threadlen() { document.getElementById("show_threadlen").innerHTML = sizestring(slide_threadlen.value); }
+window.addEventListener('load', function () {
+	populate_length();
+	populate_width();
+	populate_barrelwidth();
+	populate_threadlen();
+});
+
+slide_length.oninput = function() { populate_length(); }
+slide_width.oninput = function() {
+	populate_width();
+	want_width = this.value;
+	if(this.value < slide_barrelwidth.value) {
+		slide_barrelwidth.value = this.value;
+		populate_barrelwidth();
+	} else if(this.value > want_barwid && want_barwid != -1) {
+		slide_barrelwidth.value = want_barwid;
+		populate_barrelwidth();
+	} else if(this.value > slide_barrelwidth.value && slide_barrelwidth.value < want_barwid && want_barwid != -1) {
+		slide_barrelwidth.value = this.value;
+		populate_barrelwidth();
+	}
+}
+slide_barrelwidth.oninput = function() {
+	populate_barrelwidth();
+	want_barwid = this.value;
+	if(this.value > slide_width.value) {
+		slide_width.value = this.value;
+		populate_width();
+	} else if(this.value < want_width && want_width != -1) {
+		slide_width.value = want_width;
+		populate_width();
+	} else if(this.value < slide_width.value && slide_width.value > want_width && want_width != -1) {
+		slide_width.value = this.value;
+		populate_width();
+	}
+}
+select_gender.oninput = function() {
+	if(this.value === "female") {
+		document.getElementById("legend").src="sil-f.png";
+		document.getElementById("male_threadlen").style.visibility="hidden";
+	} else {
+		document.getElementById("legend").src="sil-m.png";
+		document.getElementById("male_threadlen").style.visibility="visible";
+	}
+}
+slide_threadlen.oninput = function() { populate_threadlen(); }
+
+$(function () {
+	$(":disabled").css("background", "#22ea22");
+	$(document).ajaxSend(function(e, xhr, opt){
+		$("#solve_btn").prop("disabled", true);
+	});
+	$(document).ajaxStop(function(e, xhr, opt){
+		$("#solve_btn").prop("disabled", false);
+	});
+	$('#check_btn').click(function () {
+		var json_req = JSON.stringify({ 
+			"length":parseInt(slide_length.value),
+			"width":parseInt(slide_width.value),
+			"barrelwidth":parseInt(slide_barrelwidth.value),
+			"gender":(select_gender.value === "female"),
+			"threadlength":parseInt(slide_threadlen.value),
+			"thread":(document.getElementById("in_thread").value),
+			"calibermm":(document.getElementById("in_caliber").value),
+			"material":(document.getElementById("in_material").value)
+			});
+	    document.getElementById("resultmessage").innerHTML = "<pre>\n"+JSON.stringify(JSON.parse(json_req),null,2)+"</pre>\nA confirmation of correct configuration and retail price could be shown at this point.<br/>";
+		$.ajax({
+			type: "POST",
+			contentType: "application/json; charset=utf-8",
+			url : "http://localhost:8080/checkit",
+			//url : "https://sud-api-1.ew.r.appspot.com/checkit",
+			data : json_req,
+			dataType: "json",
+            success(response) {
+				//console.log(response);
+				//if(response.stats.solutions_found >= 1) {
+				//	// solution
+				//	for(var pos=1; pos <= blks; pos++)
+				//		$('#out_'+pos).val(response.board[pos-1]);
+				//} else {
+				//	// blank
+				//	for(var pos=1; pos <= blks; pos++)
+				//		$('#out_'+pos).val("");
+				//}
+				//if(response.stats.solutions_found == 1) {
+				//	document.getElementById("resultmessage").innerHTML = "Difficulty indicator: "+response.stats.rating+"<br/>10 is difficult, 0 is easy." +
+				//		(response.stats.message.length > 0 ? "<br/>"+response.stats.message : "");
+				//} else {
+				//	document.getElementById("resultmessage").innerHTML = "Found "+response.stats.solutions_found+" solutions." +
+				//		(response.stats.message.length > 0 ? "<br/>"+response.stats.message : "");
+				//}
+            },
+			error: function (result) {
+				//alert(result.responseText);
+			}
+        });
+	});
+});
+</script>
+
+</body>
+</html>
